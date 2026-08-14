@@ -383,6 +383,10 @@ tbody tr:hover {
   background: #f8fafc;
 }
 
+.clickable-row {
+  cursor: pointer;
+}
+
 tbody tr:last-child td {
   border-bottom: 0;
 }
@@ -487,6 +491,138 @@ tbody tr:last-child td {
 .error-card p {
   margin-top: 4px;
   color: #7f1d1d;
+}
+
+.nested-table {
+  padding: 0;
+}
+
+.detail-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 40;
+  width: min(520px, 100%);
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: -20px 0 45px rgba(15, 23, 42, 0.18);
+  padding: 24px;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.drawer-header h2,
+.detail-grid h3,
+.panel h3 {
+  margin: 0;
+  color: var(--text-strong);
+}
+
+.drawer-header h2 {
+  font-size: 22px;
+}
+
+.drawer-header button,
+.action-button,
+.compact-list button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  padding: 9px 12px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-row,
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 12px 14px;
+}
+
+.detail-row span,
+.setting-item span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.detail-row strong,
+.setting-item strong {
+  color: var(--text-strong);
+  text-align: right;
+  word-break: break-word;
+}
+
+.log-list {
+  display: grid;
+  gap: 8px;
+}
+
+.log-line {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0f172a;
+  padding: 10px 12px;
+}
+
+.log-line span {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.log-line code {
+  color: #e5e7eb;
+  font-family: var(--mono);
+  white-space: pre-wrap;
+}
+
+.compact-list,
+.settings-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.compact-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notice {
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  padding: 12px;
 }
 
 .skeleton-layout {

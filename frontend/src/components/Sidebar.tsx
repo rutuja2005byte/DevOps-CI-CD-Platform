@@ -10,16 +10,23 @@ import {
 } from 'lucide-react'
 
 const navigation = [
-  { label: 'Overview', icon: Gauge, active: true },
-  { label: 'Pipelines', icon: GitBranch, active: false },
-  { label: 'Builds', icon: Layers3, active: false },
-  { label: 'Deployments', icon: Rocket, active: false },
-  { label: 'Containers', icon: Boxes, active: false },
-  { label: 'Logs', icon: ScrollText, active: false },
-  { label: 'Settings', icon: Settings, active: false },
+  { label: 'Overview', icon: Gauge },
+  { label: 'Pipelines', icon: GitBranch },
+  { label: 'Builds', icon: Layers3 },
+  { label: 'Deployments', icon: Rocket },
+  { label: 'Containers', icon: Boxes },
+  { label: 'Logs', icon: ScrollText },
+  { label: 'Settings', icon: Settings },
 ]
 
-export function Sidebar() {
+export type DashboardPage = (typeof navigation)[number]['label']
+
+interface SidebarProps {
+  activePage: DashboardPage
+  onNavigate: (page: DashboardPage) => void
+}
+
+export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div>
@@ -34,18 +41,23 @@ export function Sidebar() {
         </div>
 
         <nav className="nav-list" aria-label="Primary navigation">
-          {navigation.map(({ label, icon: Icon, active }) => (
+          {navigation.map(({ label, icon: Icon }) => {
+            const active = label === activePage
+
+            return (
             <button
               className={`nav-item${active ? ' is-active' : ''}`}
               type="button"
               key={label}
               aria-current={active ? 'page' : undefined}
-              title={active ? `${label} dashboard` : `${label} placeholder`}
+              title={`${label} dashboard`}
+              onClick={() => onNavigate(label)}
             >
               <Icon size={18} aria-hidden="true" />
               <span>{label}</span>
             </button>
-          ))}
+            )
+          })}
         </nav>
       </div>
 

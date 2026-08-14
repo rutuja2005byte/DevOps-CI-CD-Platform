@@ -2,9 +2,13 @@ import { Database, MonitorCheck, Server } from 'lucide-react'
 
 interface SystemStatusProps {
   isBackendOnline: boolean
+  databaseOnline: boolean
 }
 
-export function SystemStatus({ isBackendOnline }: SystemStatusProps) {
+export function SystemStatus({
+  isBackendOnline,
+  databaseOnline,
+}: SystemStatusProps) {
   return (
     <section className="panel system-status">
       <div className="section-heading">
@@ -22,7 +26,9 @@ export function SystemStatus({ isBackendOnline }: SystemStatusProps) {
         <div className="system-item">
           <Database size={18} aria-hidden="true" />
           <span>PostgreSQL</span>
-          <strong>Managed by Backend</strong>
+          <strong className={databaseOnline ? 'text-success' : 'text-danger'}>
+            {databaseOnline ? 'Online' : 'Offline'}
+          </strong>
         </div>
         <div className="system-item">
           <MonitorCheck size={18} aria-hidden="true" />
