@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
@@ -16,6 +17,8 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
