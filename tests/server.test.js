@@ -12,3 +12,13 @@ describe("GET /", () => {
     );
   });
 });
+
+describe("GET /health", () => {
+  test("should return UP status", async () => {
+    const response = await request(app).get("/health");
+
+    expect(response.statusCode).toBe(200);
+
+    expect(response.body.status).toBe("UP");
+  });
+});
