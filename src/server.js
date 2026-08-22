@@ -6,6 +6,7 @@ const PORT = 3000;
 
 // Home route
 app.get("/", (req, res) => {
+  console.log("GET / request received");
   res.json({
     message: "DevOps Platform is running!"
   });
@@ -13,6 +14,7 @@ app.get("/", (req, res) => {
 
 // Health check route
 app.get("/health", (req, res) => {
+  console.log("Health check requested");
   res.json({
     status: "UP"
   });
@@ -20,6 +22,8 @@ app.get("/health", (req, res) => {
 
 // Users API
 app.get("/api/users", (req, res) => {
+  console.log("GET /api/users request received");
+
   res.json([
     {
       id: 1,
@@ -30,6 +34,14 @@ app.get("/api/users", (req, res) => {
       name: "John"
     }
   ]);
+});
+
+app.use((err, req, res, next) => {
+  console.error("Application error:", err);
+
+  res.status(500).json({
+    error: "Internal Server Error"
+  });
 });
 
 // Start server only when this file is run directly
