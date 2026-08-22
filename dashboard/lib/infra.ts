@@ -6,22 +6,54 @@ const execFileAsync = promisify(execFile);
 export const CD_CONTAINER = "devops-platform-cd";
 export const COMPOSE_CONTAINER = "devops-platform-app";
 
-const DOCKER_TIMEOUT_MS = 5_000;
+const DOCKER_TIMEOUT_MS = 8_000;
 const HTTP_TIMEOUT_MS = 3_000;
-const LOG_TAIL = 200;
+export const LOG_TAIL = 200;
 
-type DockerInspect = {
+export type DockerInspect = {
+  Id?: string;
+  Created?: string;
   Name?: string;
-  Config?: { Image?: string };
+  RestartCount?: number;
+  Config?: {
+    Image?: string;
+    Cmd?: string[];
+    Hostname?: string;
+  };
   State?: {
     Status?: string;
     Running?: boolean;
-    Health?: { Status?: string };
+    Restarting?: boolean;
+    ExitCode?: number;
+    Error?: string;
     StartedAt?: string;
+    FinishedAt?: string;
+    Health?: { Status?: string };
+  };
+  HostConfig?: {
+    RestartPolicy?: { Name?: string };
   };
   NetworkSettings?: {
+    Networks?: Record<string, { IPAddress?: string } | undefined>;
     Ports?: Record<string, Array<{ HostIp?: string; HostPort?: string }> | null>;
   };
+};
+
+export type ContainerStats = {
+  cpu: string;
+  memory: string;
+  memoryPercent: string;
+  networkIO: string;
+  pids: string;
+};
+
+export type LogSummary = {
+  lineCount: number;
+  errorCount: number;
+  warningCount: number;
+  lastTimestamp: string | null;
+  lastError: string | null;
+  recentErrors: string[];
 };
 
 function jenkinsAuthHeader(): string | undefined {
@@ -136,6 +168,96 @@ export async function containerLogs(name: string): Promise<string> {
   ]);
 
   return [stdout, stderr].filter(Boolean).join("\n").trim();
+}
+
+export async function containerStats(name: string): Promise<ContainerStats | null> {
+  try {
+    const { stdout } = await runDocker([
+      "stats",
+      "--no-stream",
+      "--format",
+      "{{json .}}",
+      name,
+    ]);
+    const stats = JSON.parse(stdout) as {
+      CPUPerc?: string;
+      MemUsage?: string;
+      MemPerc?: string;
+      NetIO?: string;
+      PIDs?: string;
+    };
+
+    return {
+      cpu: stats.CPUPerc || "unavailable",
+      memory: stats.MemUsage || "unavailable",
+      memoryPercent: stats.MemPerc || "unavailable",
+      networkIO: stats.NetIO || "unavailable",
+      pids: stats.PIDs || "unavailable",
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function summarizeLogs(text: string): LogSummary {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const errorRe = /\b(error|err|fail(?:ed|ure)?|fatal|exception|unhealthy|crash)\b/i;
+  const warnRe = /\bwarn(?:ing)?\b/i;
+  const errors = lines.filter((line) => errorRe.test(line));
+  const warnings = lines.filter((line) => warnRe.test(line) && !errorRe.test(line));
+  const timestampRe = /^\d{4}-\d{2}-\d{2}T\S+/;
+
+  let lastTimestamp: string | null = null;
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const match = lines[index].match(timestampRe);
+    if (match) {
+      lastTimestamp = match[0];
+      break;
+    }
+  }
+
+  return {
+    lineCount: lines.length,
+    errorCount: errors.length,
+    warningCount: warnings.length,
+    lastTimestamp,
+    lastError: errors.at(-1) ?? null,
+    recentErrors: errors.slice(-5),
+  };
+}
+
+export function shortId(id: string | undefined): string {
+  if (!id) return "unavailable";
+  return id.replace(/^sha256:/, "").slice(0, 12);
+}
+
+export function formatUptime(startedAt: string | null | undefined): string {
+  if (!startedAt || startedAt.startsWith("0001-01-01")) return "unavailable";
+  const start = Date.parse(startedAt);
+  if (Number.isNaN(start)) return "unavailable";
+
+  let seconds = Math.max(0, Math.floor((Date.now() - start) / 1000));
+  const days = Math.floor(seconds / 86400);
+  seconds %= 86400;
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+export function networkName(inspect: DockerInspect): string {
+  const networks = inspect.NetworkSettings?.Networks;
+  const name = networks ? Object.keys(networks)[0] : undefined;
+  return name || "unavailable";
+}
+
+export function containerIP(inspect: DockerInspect): string {
+  const networks = inspect.NetworkSettings?.Networks;
+  const first = networks ? Object.values(networks)[0] : undefined;
+  return first?.IPAddress || "unavailable";
 }
 
 type JenkinsJob = {
