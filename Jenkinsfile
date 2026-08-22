@@ -51,6 +51,12 @@ pipeline {
                 '''
             }
         }
+        stage('Health Check') {
+            steps {
+                sh 'sleep 5'
+                sh 'curl --fail http://localhost:3001/health'
+            }
+        }
 
     }
 }
