@@ -3,6 +3,7 @@ pipeline {
     agent any
 
     environment {
+        PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         IMAGE_NAME = 'rutuja2005byte/devops-cicd-platform:latest'
         PREVIOUS_IMAGE = 'devops-cicd-platform:previous'
         CONTAINER_NAME = 'devops-platform-cd'
@@ -14,8 +15,20 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
+                    echo "PATH=$PATH"
+
+                    echo "Node:"
+                    which node
                     node --version
+
+                    echo "NPM:"
+                    which npm
                     npm --version
+
+                    echo "Docker:"
+                    which docker
+                    docker --version
+
                     npm ci
                     npm test
                 '''
