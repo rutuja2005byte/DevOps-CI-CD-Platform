@@ -8,7 +8,7 @@ describe("GET /", () => {
     expect(response.statusCode).toBe(200);
 
     expect(response.body.message).toBe(
-      "DevOps Platform is running!"
+      "Something else!"
     );
   });
 });
