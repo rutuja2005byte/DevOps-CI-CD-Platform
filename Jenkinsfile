@@ -105,7 +105,7 @@ pipeline {
 
                     sleep 5
 
-                    curl --fail http://localhost:3001/this-does-not-exist
+                    curl --fail http://localhost:3001/health
 
                     echo "Rollback completed successfully."
 
