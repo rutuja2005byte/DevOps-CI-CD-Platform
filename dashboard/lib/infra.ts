@@ -339,11 +339,13 @@ export async function latestJenkinsBuild(): Promise<{
       headers
     );
 
-    const branch =
+    const rawBranch =
       build.actions
         ?.flatMap((action) => action.lastBuiltRevision?.branch ?? [])
         .map((item) => item.name)
         .find(Boolean) ?? "unavailable";
+
+    const branch = rawBranch.replace(/^refs\/(heads|remotes\/origin)\//, "");
 
     return {
       status: build.result ? build.result.toUpperCase() : "IN PROGRESS",
