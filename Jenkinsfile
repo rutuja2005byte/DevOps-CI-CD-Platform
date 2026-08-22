@@ -1,51 +1,57 @@
 pipeline {
+
     agent any
 
     environment {
-        PATH = "/opt/homebrew/bin:/usr/local/bin:${env.PATH}"
-        IMAGE = "rutuja2005byte/devops-cicd-platform:latest"
-        PREVIOUS_IMAGE = "devops-cicd-platform:previous"
-        CONTAINER_NAME = "devops-platform-cd"
+        IMAGE_NAME = 'rutuja2005byte/devops-cicd-platform:latest'
+        PREVIOUS_IMAGE = 'devops-cicd-platform:previous'
+        CONTAINER_NAME = 'devops-platform-cd'
+        PORT = '3001'
     }
 
     stages {
 
         stage('Test') {
             steps {
-                sh 'node --version'
-                sh 'npm --version'
-                sh 'npm ci'
-                sh 'npm test'
+                sh '''
+                    node --version
+                    npm --version
+                    npm ci
+                    npm test
+                '''
             }
         }
 
         stage('Docker Test') {
             steps {
-                sh 'docker --version'
-                sh 'docker ps'
+                sh '''
+                    docker --version
+                    docker ps
+                '''
             }
         }
 
         stage('Pull Docker Image') {
             steps {
-                sh 'docker pull $IMAGE'
+                sh '''
+                    docker pull ${IMAGE_NAME}
+                '''
             }
         }
 
         stage('Save Previous Image') {
             steps {
                 sh '''
-                    if docker ps -q --filter "name=$CONTAINER_NAME" | grep -q .; then
-                        CURRENT_IMAGE=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME)
+                    if docker ps -q --filter "name=${CONTAINER_NAME}" | grep -q .; then
+                        CURRENT_IMAGE=$(docker inspect --format='{{.Config.Image}}' ${CONTAINER_NAME})
 
-                        echo "Current running image: $CURRENT_IMAGE"
+                        echo "Current running image: ${CURRENT_IMAGE}"
 
-                        docker tag "$CURRENT_IMAGE" "$PREVIOUS_IMAGE"
+                        docker tag ${CURRENT_IMAGE} ${PREVIOUS_IMAGE}
 
-                        echo "Previous image saved as: $PREVIOUS_IMAGE"
+                        echo "Previous image saved as: ${PREVIOUS_IMAGE}"
                     else
-                        echo "No existing application container found."
-                        echo "Skipping previous image backup."
+                        echo "No previous container found."
                     fi
                 '''
             }
@@ -53,13 +59,17 @@ pipeline {
 
         stage('Stop Old Container') {
             steps {
-                sh 'docker stop $CONTAINER_NAME || true'
+                sh '''
+                    docker stop ${CONTAINER_NAME} || true
+                '''
             }
         }
 
         stage('Remove Old Container') {
             steps {
-                sh 'docker rm $CONTAINER_NAME || true'
+                sh '''
+                    docker rm ${CONTAINER_NAME} || true
+                '''
             }
         }
 
@@ -67,9 +77,9 @@ pipeline {
             steps {
                 sh '''
                     docker run -d \
-                    --name $CONTAINER_NAME \
-                    -p 3001:3000 \
-                    $IMAGE
+                      --name ${CONTAINER_NAME} \
+                      -p ${PORT}:3000 \
+                      ${IMAGE_NAME}
                 '''
             }
         }
@@ -78,7 +88,10 @@ pipeline {
             steps {
                 sh '''
                     sleep 5
-                    curl --fail http://localhost:3001/health
+
+                    curl --fail http://localhost:${PORT}/health
+
+                    echo "Health check passed!"
                 '''
             }
         }
@@ -86,39 +99,36 @@ pipeline {
 
     post {
 
+        success {
+            echo 'Deployment completed successfully!'
+        }
+
         failure {
-            echo 'Deployment failed. Starting rollback...'
+            echo 'Deployment failed! Starting rollback...'
 
             sh '''
-                docker stop $CONTAINER_NAME || true
-                docker rm $CONTAINER_NAME || true
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
 
-                if docker image inspect $PREVIOUS_IMAGE > /dev/null 2>&1; then
+                if docker image inspect ${PREVIOUS_IMAGE} > /dev/null 2>&1; then
 
-                    echo "Previous image found."
-                    echo "Rolling back..."
+                    echo "Rolling back to previous image..."
 
                     docker run -d \
-                    --name $CONTAINER_NAME \
-                    -p 3001:3000 \
-                    $PREVIOUS_IMAGE
+                      --name ${CONTAINER_NAME} \
+                      -p ${PORT}:3000 \
+                      ${PREVIOUS_IMAGE}
 
                     sleep 5
 
-                    curl --fail http://localhost:3001/health
+                    curl --fail http://localhost:${PORT}/health
 
-                    echo "Rollback completed successfully."
+                    echo "Rollback completed successfully!"
 
                 else
-                    echo "No previous image available."
-                    echo "Rollback cannot be performed."
-                    exit 1
+                    echo "No previous image available for rollback."
                 fi
             '''
-        }
-
-        success {
-            echo 'Deployment completed successfully!'
         }
     }
 }
