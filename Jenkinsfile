@@ -9,12 +9,10 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'rutuja2005byte/devops-cicd-platform'
         CONTAINER_NAME = 'devops-platform-cd'
-
         DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
         PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         IMAGE_NAME = 'rutuja2005byte/devops-cicd-platform:latest'
         PREVIOUS_IMAGE = 'devops-cicd-platform:previous'
-        CONTAINER_NAME = 'devops-platform-cd'
         PORT = '3001'
     }
 
@@ -51,7 +49,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Docker Login') {
             steps {
                 sh '''
