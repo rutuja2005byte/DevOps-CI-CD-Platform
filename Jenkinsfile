@@ -7,6 +7,10 @@ pipeline {
     }
 
     environment {
+        DOCKER_IMAGE = 'rutuja2005byte/devops-cicd-platform'
+        CONTAINER_NAME = 'devops-platform-cd'
+
+        DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
         PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         IMAGE_NAME = 'rutuja2005byte/devops-cicd-platform:latest'
         PREVIOUS_IMAGE = 'devops-cicd-platform:previous'
@@ -44,6 +48,17 @@ pipeline {
                 sh '''
                     docker --version
                     docker ps
+                '''
+            }
+        }
+        
+        stage('Docker Login') {
+            steps {
+                sh '''
+                echo "$DOCKER_CREDENTIALS_PSW" | \
+                docker login \
+                --username "$DOCKER_CREDENTIALS_USR" \
+                --password-stdin
                 '''
             }
         }
