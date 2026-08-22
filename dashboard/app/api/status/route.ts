@@ -45,7 +45,7 @@ export async function GET() {
       else application = "DOWN";
     }
 
-    const jenkins = (await jenkinsReachable()) ? "UP" : "UNAVAILABLE";
+    const jenkins = (await jenkinsReachable()) ? "RUNNING" : "DOWN";
 
     return Response.json({
       ok: true,

@@ -287,11 +287,22 @@ function jenkinsBaseUrl(): string {
 }
 
 export async function jenkinsReachable(): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), HTTP_TIMEOUT_MS);
+
   try {
-    await fetchJson<unknown>(`${jenkinsBaseUrl()}/api/json?tree=mode`, jenkinsHeaders());
-    return true;
+    const response = await fetch(`${jenkinsBaseUrl()}/login`, {
+      cache: "no-store",
+      headers: jenkinsHeaders(),
+      signal: controller.signal,
+    });
+
+    if (response.headers.get("x-jenkins")) return true;
+    return response.ok;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
