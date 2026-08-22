@@ -1,42 +1,52 @@
-import { execFile } from "child_process";
-import { promisify } from "util";
+import {
+  appHealth,
+  CD_CONTAINER,
+  hostPort,
+  publicError,
+  resolveAppContainer,
+} from "@/lib/infra";
 
-const execFileAsync = promisify(execFile);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { stdout } = await execFileAsync("docker", [
-      "inspect",
-      "--format",
-      "{{json .}}",
-      "devops-platform-cd",
-    ]);
+    const { name, inspect } = await resolveAppContainer();
+    const port = hostPort(inspect);
+    const dockerHealth = inspect.State?.Health?.Status;
+    const httpHealth = await appHealth(port);
 
-    const container = JSON.parse(stdout);
+    const health =
+      dockerHealth && dockerHealth !== "unknown"
+        ? dockerHealth.toUpperCase()
+        : httpHealth;
 
     return Response.json({
-      success: true,
+      ok: true,
       container: {
-        name: container.Name.replace("/", ""),
-        image: container.Config.Image,
-        status: container.State.Status,
-        running: container.State.Running,
-        health: container.State.Health?.Status || "unknown",
-        startedAt: container.State.StartedAt,
+        name,
+        image: inspect.Config?.Image ?? "unavailable",
+        status: inspect.State?.Status?.toUpperCase() ?? "UNKNOWN",
+        running: Boolean(inspect.State?.Running),
+        health,
+        startedAt: inspect.State?.StartedAt ?? null,
+        port: port ? `${port} → 3000` : "unavailable",
       },
     });
   } catch (error) {
     return Response.json(
       {
-        success: false,
+        ok: false,
         container: {
-          name: "devops-platform-cd",
-          status: "stopped",
+          name: CD_CONTAINER,
+          status: "UNAVAILABLE",
           running: false,
-          health: "down",
+          health: "UNAVAILABLE",
+          port: "unavailable",
         },
+        error: publicError(error),
       },
-      { status: 500 }
+      { status: 503 }
     );
   }
 }
