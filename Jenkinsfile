@@ -2,6 +2,10 @@ pipeline {
 
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     environment {
         PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         IMAGE_NAME = 'rutuja2005byte/devops-cicd-platform:latest'
