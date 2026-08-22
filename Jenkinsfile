@@ -23,5 +23,11 @@ pipeline {
             }
         }
 
+        stage('Pull Docker Image') {
+            steps {
+                sh 'docker pull YOUR_DOCKERHUB_USERNAME/devops-cicd-platform:latest'
+            }
+        }
+
     }
 }
