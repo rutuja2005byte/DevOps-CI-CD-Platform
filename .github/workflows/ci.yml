@@ -29,5 +29,26 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build Docker image
-        run: docker build -t devops-cicd-platform .
+      - name: Login to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        if: github.event_name == 'push'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/devops-cicd-platform
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/devops-cicd-platform:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/devops-cicd-platform:${{ github.sha }}
