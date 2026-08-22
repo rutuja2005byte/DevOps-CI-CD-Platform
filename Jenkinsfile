@@ -106,7 +106,7 @@ pipeline {
                 sh '''
                     sleep 5
 
-                    curl --fail http://localhost:${PORT}/health-wrong
+                    curl --fail http://localhost:${PORT}/health
 
                     echo "Health check passed!"
                 '''
