@@ -4,6 +4,7 @@ pipeline {
 
     triggers {
         githubPush()
+        pollSCM('H/2 * * * *')
     }
 
     environment {
@@ -64,7 +65,17 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 sh '''
-                    docker pull ${IMAGE_NAME}
+                    for attempt in 1 2 3 4 5 6; do
+                      if docker pull ${IMAGE_NAME}; then
+                        echo "Pulled ${IMAGE_NAME}"
+                        exit 0
+                      fi
+                      echo "Image not ready yet (attempt ${attempt}). Waiting for GitHub Actions to publish..."
+                      sleep 20
+                    done
+
+                    echo "Failed to pull ${IMAGE_NAME}"
+                    exit 1
                 '''
             }
         }
