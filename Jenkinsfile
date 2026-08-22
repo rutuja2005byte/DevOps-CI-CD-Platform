@@ -29,5 +29,28 @@ pipeline {
             }
         }
 
+        stage('Stop Old Container') {
+            steps {
+                sh 'docker stop devops-platform-cd || true'
+            }
+        }
+
+        stage('Remove Old Container') {
+            steps {
+                sh 'docker rm devops-platform-cd || true'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker run -d \
+                    --name devops-platform-cd \
+                    -p 3001:3000 \
+                    rutuja2005byte/devops-cicd-platform:latest
+                '''
+            }
+        }
+
     }
 }
